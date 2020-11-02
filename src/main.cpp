@@ -180,7 +180,7 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 		centroids.row(i) /= F.cols();
 	}
 
-	// TODO (Assignment 3)
+	// TODO: (Assignment 3)
 
 	// Method (1): Top-down approach.
 	// Split each set of primitives into 2 sets of roughly equal size,
@@ -192,20 +192,52 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Sphere::intersect(const Ray &ray, Intersection &hit) {
-	// TODO (Assignment 2)
-	return false;
+bool Sphere::intersect(const Ray& ray, Intersection& hit) {
+  // TODO: - Done
+  //
+  // Compute the intersection between the ray and the sphere
+  // If the ray hits the sphere, set the result of the intersection in the
+  // struct 'hit'
+
+	// vector (e - c)
+  Vector3d vec = ray.origin - this->position;  
+	// ray direction
+  Vector3d rd = ray.direction;  
+
+	// d dot d
+	double dd = rd.dot(rd);              
+	// discriminant, B^2 - 4AC
+  double df = pow(2 * rd.dot(vec), 2) -
+              4 * dd * ((vec).dot(vec) - pow(this->radius, 2));
+  if (df >= 0) {
+		double t1 = (-2 * rd.dot(vec) + sqrt(df)) / (2 * dd);
+		double t2 = (-2 * rd.dot(vec) - sqrt(df)) / (2 * dd);
+
+    hit.ray_param = std::min(t1, t2);
+    if (hit.ray_param < 0) {
+        hit.ray_param = std::max(t1, t2);
+    }
+    if (hit.ray_param < 0) {
+        return false;
+    }
+
+		hit.position = ray.origin + hit.ray_param * rd;
+		hit.normal = (hit.position - this->position).normalized();
+
+    return true;
+  }
+  return false;
 }
 
 bool Parallelogram::intersect(const Ray &ray, Intersection &hit) {
-	// TODO (Assignment 2)
+	// TODO: (Assignment 2)
 	return false;
 }
 
 // -----------------------------------------------------------------------------
 
 bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, const Vector3d &c, Intersection &hit) {
-	// TODO (Assignment 3)
+	// TODO: (Assignment 3)
 	//
 	// Compute whether the ray intersects the given triangle.
 	// If you have done the parallelogram case, this should be very similar to it.
@@ -213,7 +245,7 @@ bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, co
 }
 
 bool intersect_box(const Ray &ray, const AlignedBox3d &box) {
-	// TODO (Assignment 3)
+	// TODO: (Assignment 3)
 	//
 	// Compute whether the ray intersects the given box.
 	// There is no need to set the resulting normal and ray parameter, since
@@ -222,7 +254,7 @@ bool intersect_box(const Ray &ray, const AlignedBox3d &box) {
 }
 
 bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
-	// TODO (Assignment 3)
+	// TODO: (Assignment 3)
 
 	// Method (1): Traverse every triangle and return the closest hit.
 
@@ -257,12 +289,12 @@ Vector3d ray_color(const Scene &scene, const Ray &ray, const Object &obj, const 
 		Vector3d Li = (light.position - hit.position).normalized();
 		Vector3d N = hit.normal;
 
-		// TODO (Assignment 2, shadow rays)
+		// TODO: (Assignment 2, shadow rays)
 
 		// Diffuse contribution
 		Vector3d diffuse = mat.diffuse_color * std::max(Li.dot(N), 0.0);
 
-		// TODO (Assignment 2, specular contribution)
+		// TODO: (Assignment 2, specular contribution)
 		Vector3d specular(0, 0, 0);
 
 		// Attenuate lights according to the squared distance to the lights
@@ -270,10 +302,10 @@ Vector3d ray_color(const Scene &scene, const Ray &ray, const Object &obj, const 
 		lights_color += (diffuse + specular).cwiseProduct(light.intensity) /  D.squaredNorm();
 	}
 
-	// TODO (Assignment 2, reflected ray)
+	// TODO: (Assignment 2, reflected ray)
 	Vector3d reflection_color(0, 0, 0);
 
-	// TODO (Assignment 2, refracted ray)
+	// TODO: (Assignment 2, refracted ray)
 	Vector3d refraction_color(0, 0, 0);
 
 	// Rendering equation
@@ -284,21 +316,43 @@ Vector3d ray_color(const Scene &scene, const Ray &ray, const Object &obj, const 
 
 // -----------------------------------------------------------------------------
 
-Object * find_nearest_object(const Scene &scene, const Ray &ray, Intersection &closest_hit) {
-	int closest_index = -1;
-	// TODO (Assignment 2, find nearest hit)
+Object* find_nearest_object(const Scene& scene, const Ray& ray,
+                            Intersection& closest_hit) {
+  int closest_index = -1;
+  // TODO: - Done.
+  //
+  // Find the object in the scene that intersects the ray first
+  // The function must return 'nullptr' if no object is hit, otherwise it must
+  // return a pointer to the hit object, and set the parameters of the argument
+  // 'hit' to their expected values.
+	double closest_dist = INT_MAX;
 
-	if (closest_index < 0) {
-		// Return a NULL pointer
-		return nullptr;
-	} else {
-		// Return a pointer to the hit object. Don't forget to set 'closest_hit' accordingly!
-		return scene.objects[closest_index].get();
-	}
+  for (int i = 0; i < scene.objects.size(); i++) {
+    Intersection hit;
+
+    if (scene.objects[i]->intersect(ray, hit)) {
+   		// calculate distance between hit and ray origin
+			double dist = (hit.position - ray.origin).norm();
+			if (dist < closest_dist) {
+				closest_dist = dist;
+				closest_hit = hit;
+				closest_index = i;
+			}
+		};
+  }
+
+  if (closest_index < 0) {
+    // Return a NULL pointer
+    return nullptr;
+  } else {
+    // Return a pointer to the hit object. Don't forget to set 'closest_hit'
+    // accordingly!
+    return scene.objects[closest_index].get();
+  }
 }
 
 bool is_light_visible(const Scene &scene, const Ray &ray, const Light &light) {
-	// TODO (Assignment 2, shadow ray)
+	// TODO: (Assignment 2, shadow ray)
 	return true;
 }
 
@@ -329,8 +383,8 @@ void render_scene(const Scene &scene) {
 	// The sensor grid is at a distance 'focal_length' from the camera center,
 	// and covers an viewing angle given by 'field_of_view'.
 	double aspect_ratio = double(w) / double(h);
-	double scale_y = 1.0; // TODO: Stretch the pixel grid by the proper amount here
-	double scale_x = 1.0; //
+	double scale_y = tan(scene.camera.field_of_view / 2) * scene.camera.focal_length; // TODO: Stretch the pixel grid by the proper amount here
+	double scale_x = scale_y * aspect_ratio; //
 
 	// The pixel grid through which we shoot rays is at a distance 'focal_length'
 	// from the sensor, and is scaled from the canonical [-1,1] in order
@@ -343,15 +397,17 @@ void render_scene(const Scene &scene) {
 		std::cout << std::fixed << std::setprecision(2);
 		std::cout << "Ray tracing: " << (100.0 * i) / w << "%\r" << std::flush;
 		for (unsigned j = 0; j < h; ++j) {
-			// TODO (Assignment 2, depth of field)
-			Vector3d shift = grid_origin + (i+0.5)*x_displacement + (j+0.5)*y_displacement;
+			// TODO: (Assignment 2, depth of field)
+			Vector3d shift = grid_origin + (i + 0.5) * x_displacement + (j + 0.5) * y_displacement;
+			// Vector3d noise(scene.camera.lens_radius * (1.0f * rand() / RAND_MAX), scene.camera.lens_radius * (1.0f * rand() / RAND_MAX), scene.camera.position[2]);
 
 			// Prepare the ray
 			Ray ray;
 
 			if (scene.camera.is_perspective) {
 				// Perspective camera
-				// TODO (Assignment 2, perspective camera)
+        ray.origin = scene.camera.position;
+        ray.direction = shift;
 			} else {
 				// Orthographic camera
 				ray.origin = scene.camera.position + Vector3d(shift[0], shift[1], 0);
@@ -430,7 +486,7 @@ Scene load_scene(const std::string &filename) {
 			sphere->radius = entry["Radius"];
 			object = sphere;
 		} else if (entry["Type"] == "Parallelogram") {
-			// TODO
+			// TODO:
 		} else if (entry["Type"] == "Mesh") {
 			// Load mesh from a file
 			std::string filename = std::string(DATA_DIR) + entry["Path"].get<std::string>();
@@ -447,7 +503,7 @@ Scene load_scene(const std::string &filename) {
 
 int main(int argc, char *argv[]) {
 	if (argc < 2) {
-		std::cerr << "Usage: " << argv[0] << " scene.json" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " scene2.json" << std::endl;
 		return 1;
 	}
 	Scene scene = load_scene(argv[1]);
