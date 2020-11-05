@@ -221,7 +221,7 @@ bool Sphere::intersect(const Ray& ray, Intersection& hit) {
         return false;
     }
 
-		hit.position = ray.origin + hit.ray_param * rd;
+		hit.position = ray.origin + hit.ray_param * ray.direction;
 		hit.normal = (hit.position - this->position).normalized();
 
     return true;
