@@ -389,7 +389,8 @@ void render_scene(const Scene &scene) {
 	// The pixel grid through which we shoot rays is at a distance 'focal_length'
 	// from the sensor, and is scaled from the canonical [-1,1] in order
 	// to produce the target field of view.
-	Vector3d grid_origin(-scale_x, scale_y, -scene.camera.focal_length);
+	// grid_origin - camera_position
+	Vector3d grid_origin(-1 * scale_x, 1 * scale_y, 0);
 	Vector3d x_displacement(2.0 / w * scale_x, 0, 0);
 	Vector3d y_displacement(0, -2.0 / h * scale_y, 0);
 
@@ -407,7 +408,7 @@ void render_scene(const Scene &scene) {
 			if (scene.camera.is_perspective) {
 				// Perspective camera
         ray.origin = scene.camera.position;
-        ray.direction = shift;
+        ray.direction = shift - scene.camera.position;
 			} else {
 				// Orthographic camera
 				ray.origin = scene.camera.position + Vector3d(shift[0], shift[1], 0);
