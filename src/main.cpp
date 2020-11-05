@@ -201,17 +201,17 @@ bool Sphere::intersect(const Ray& ray, Intersection& hit) {
 
 	// vector (e - c)
   Vector3d vec = ray.origin - this->position;  
-	// ray direction
-  Vector3d rd = ray.direction;  
 
-	// d dot d
-	double dd = rd.dot(rd);              
+	double a = ray.direction.dot(ray.direction);    
+  double b = 2 * ray.direction.dot(vec);
+	double c = (vec).dot(vec) - pow(this->radius, 2);  
+
 	// discriminant, B^2 - 4AC
-  double df = pow(2 * rd.dot(vec), 2) -
-              4 * dd * ((vec).dot(vec) - pow(this->radius, 2));
-  if (df >= 0) {
-		double t1 = (-2 * rd.dot(vec) + sqrt(df)) / (2 * dd);
-		double t2 = (-2 * rd.dot(vec) - sqrt(df)) / (2 * dd);
+  double delta = pow(b, 2) - 4 * a * c;
+
+  if (delta >= 0) {
+		double t1 = (-b + sqrt(delta)) / (2 * a);
+		double t2 = (-b - sqrt(delta)) / (2 * a);
 
     hit.ray_param = std::min(t1, t2);
     if (hit.ray_param < 0) {
@@ -390,8 +390,8 @@ void render_scene(const Scene &scene) {
 	// from the sensor, and is scaled from the canonical [-1,1] in order
 	// to produce the target field of view.
 	Vector3d grid_origin(-scale_x, scale_y, -scene.camera.focal_length);
-	Vector3d x_displacement(2.0/w*scale_x, 0, 0);
-	Vector3d y_displacement(0, -2.0/h*scale_y, 0);
+	Vector3d x_displacement(2.0 / w * scale_x, 0, 0);
+	Vector3d y_displacement(0, -2.0 / h * scale_y, 0);
 
 	for (unsigned i = 0; i < w; ++i) {
 		std::cout << std::fixed << std::setprecision(2);
@@ -503,7 +503,7 @@ Scene load_scene(const std::string &filename) {
 
 int main(int argc, char *argv[]) {
 	if (argc < 2) {
-		std::cerr << "Usage: " << argv[0] << " scene2.json" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " scene.json" << std::endl;
 		return 1;
 	}
 	Scene scene = load_scene(argv[1]);

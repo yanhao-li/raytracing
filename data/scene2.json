@@ -7,7 +7,7 @@
 
 	"Camera":
 	{
-		"IsPerspective": true,
+		"IsPerspective": false,
 		"Position": [0, 0, 2],
 		"FieldOfView": 0.7854,
 		"FocalLength": 2.0,
@@ -26,11 +26,11 @@
 	],
 	"Lights": [
 		{
-			"Position": [8, 8, 0],
+			"Position": [0, 0, -1],
 			"Color": [16, 16, 16]
 		},
 		{
-			"Position": [6, -8, 0],
+			"Position": [6, -8, 1],
 			"Color": [16, 16, 16]
 		},
 		{
@@ -55,11 +55,6 @@
 		}
 	],
 	"Objects": [
-		{
-			"Type": "Mesh",
-			"Material": 0,
-			"Path": "dragon.off"
-		},
 		{
 			"Type": "Sphere",
 			"Material": 0,
