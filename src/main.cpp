@@ -1,48 +1,13 @@
-////////////////////////////////////////////////////////////////////////////////
-// C++ include
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <string>
-#include <vector>
-#include <stack>
-
-// Eigen for matrix operations
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-
 // Image writing library
 #define STB_IMAGE_WRITE_IMPLEMENTATION // Do not include this line twice in your project!
 #include "stb_image_write.h"
 #include "utils.h"
+#include "ray_color.h"
 #include "types.h"
-
-// JSON parser library (https://github.com/nlohmann/json)
-#include "json.hpp"
-using json = nlohmann::json;
+#include "load.h"
 
 // Shortcut to avoid Eigen:: everywhere, DO NOT USE IN .h
 using namespace Eigen;
-
-// Read a triangle mesh from an off file
-void load_off(const std::string &filename, MatrixXd &V, MatrixXi &F) {
-	std::ifstream in(filename);
-	std::string token;
-	in >> token;
-	int nv, nf, ne;
-	in >> nv >> nf >> ne;
-	V.resize(nv, 3);
-	F.resize(nf, 3);
-	for (int i = 0; i < nv; ++i) {
-		in >> V(i, 0) >> V(i, 1) >> V(i, 2);
-	}
-	for (int i = 0; i < nf; ++i) {
-		int s;
-		in >> s >> F(i, 0) >> F(i, 1) >> F(i, 2);
-		assert(s == 3);
-	}
-}
 
 Mesh::Mesh(const std::string &filename) {
 	// Load a mesh from a file (assuming this is a .off file), and create a bvh
@@ -184,50 +149,8 @@ bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Function declaration here (could be put in a header file)
-Vector3d ray_color(const Scene &scene, const Ray &ray, const Object &object, const Intersection &hit, int max_bounce);
 Object * find_nearest_object(const Scene &scene, const Ray &ray, Intersection &closest_hit);
-bool is_light_visible(const Scene &scene, const Ray &ray, const Light &light);
 Vector3d shoot_ray(const Scene &scene, const Ray &ray, int max_bounce);
-
-// -----------------------------------------------------------------------------
-
-Vector3d ray_color(const Scene &scene, const Ray &ray, const Object &obj, const Intersection &hit, int max_bounce) {
-	// Material for hit object
-	const Material &mat = obj.material;
-
-	// Ambient light contribution
-	Vector3d ambient_color = obj.material.ambient_color.array() * scene.ambient_light.array();
-
-	// Punctual lights contribution (direct lighting)
-	Vector3d lights_color(0, 0, 0);
-	for (const Light &light : scene.lights) {
-		Vector3d Li = (light.position - hit.position).normalized();
-		Vector3d N = hit.normal;
-
-		// TODO: (Assignment 2, shadow rays)
-
-		// Diffuse contribution
-		Vector3d diffuse = mat.diffuse_color * std::max(Li.dot(N), 0.0);
-
-		// TODO: (Assignment 2, specular contribution)
-		Vector3d specular(0, 0, 0);
-
-		// Attenuate lights according to the squared distance to the lights
-		Vector3d D = light.position - hit.position;
-		lights_color += (diffuse + specular).cwiseProduct(light.intensity) /  D.squaredNorm();
-	}
-
-	// TODO: (Assignment 2, reflected ray)
-	Vector3d reflection_color(0, 0, 0);
-
-	// TODO: (Assignment 2, refracted ray)
-	Vector3d refraction_color(0, 0, 0);
-
-	// Rendering equation
-	Vector3d C = ambient_color + lights_color + reflection_color + refraction_color;
-
-	return C;
-}
 
 // -----------------------------------------------------------------------------
 
@@ -264,11 +187,6 @@ Object* find_nearest_object(const Scene& scene, const Ray& ray,
     // accordingly!
     return scene.objects[closest_index].get();
   }
-}
-
-bool is_light_visible(const Scene &scene, const Ray &ray, const Light &light) {
-	// TODO: (Assignment 2, shadow ray)
-	return true;
 }
 
 Vector3d shoot_ray(const Scene &scene, const Ray &ray, int max_bounce) {
@@ -346,75 +264,6 @@ void render_scene(const Scene &scene) {
 	// Save to png
 	const std::string filename("raytrace.png");
 	write_matrix_to_png(R, G, B, A, filename);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Scene load_scene(const std::string &filename) {
-	Scene scene;
-
-	// Load json data from scene file
-	json data;
-	std::ifstream in(filename);
-	in >> data;
-
-	// Helper function to read a Vector3d from a json array
-	auto read_vec3 = [] (const json &x) {
-		return Vector3d(x[0], x[1], x[2]);
-	};
-
-	// Read scene info
-	scene.background_color = read_vec3(data["Scene"]["Background"]);
-	scene.ambient_light = read_vec3(data["Scene"]["Ambient"]);
-
-	// Read camera info
-	scene.camera.is_perspective = data["Camera"]["IsPerspective"];
-	scene.camera.position = read_vec3(data["Camera"]["Position"]);
-	scene.camera.field_of_view = data["Camera"]["FieldOfView"];
-	scene.camera.focal_length = data["Camera"]["FocalLength"];
-	scene.camera.lens_radius = data["Camera"]["LensRadius"];
-
-	// Read materials
-	for (const auto &entry : data["Materials"]) {
-		Material mat;
-		mat.ambient_color = read_vec3(entry["Ambient"]);
-		mat.diffuse_color = read_vec3(entry["Diffuse"]);
-		mat.specular_color = read_vec3(entry["Specular"]);
-		mat.reflection_color = read_vec3(entry["Mirror"]);
-		mat.refraction_color = read_vec3(entry["Refraction"]);
-		mat.refraction_index = entry["RefractionIndex"];
-		mat.specular_exponent = entry["Shininess"];
-		scene.materials.push_back(mat);
-	}
-
-	// Read lights
-	for (const auto &entry : data["Lights"]) {
-		Light light;
-		light.position = read_vec3(entry["Position"]);
-		light.intensity = read_vec3(entry["Color"]);
-		scene.lights.push_back(light);
-	}
-
-	// Read objects
-	for (const auto &entry : data["Objects"]) {
-		ObjectPtr object;
-		if (entry["Type"] == "Sphere") {
-			auto sphere = std::make_shared<Sphere>();
-			sphere->position = read_vec3(entry["Position"]);
-			sphere->radius = entry["Radius"];
-			object = sphere;
-		} else if (entry["Type"] == "Parallelogram") {
-			// TODO:
-		} else if (entry["Type"] == "Mesh") {
-			// Load mesh from a file
-			std::string filename = std::string(DATA_DIR) + entry["Path"].get<std::string>();
-			object = std::make_shared<Mesh>(filename);
-		}
-		object->material = scene.materials[entry["Material"]];
-		scene.objects.push_back(object);
-	}
-
-	return scene;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

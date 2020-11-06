@@ -1,3 +1,15 @@
+#pragma once
+
+////////////////////////////////////////////////////////////////////////////////
+// C++ include
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <string>
+#include <stack>
+#include <vector>
+
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 

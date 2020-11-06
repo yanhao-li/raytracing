@@ -5,7 +5,11 @@ project(assignment4)
 add_executable(${PROJECT_NAME}
 	src/main.cpp
 	src/types.h
+	src/load.h
+	src/load.cpp
 	src/utils.h
+	src/ray_color.h
+	src/ray_color.cpp
 )
 
 # Include Eigen for linear algebra, stb and gif-h to export images, json to parse the json files
