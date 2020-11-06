@@ -1,5 +1,11 @@
 #include "load.h"
 
+Mesh::Mesh(const std::string &filename) {
+	// Load a mesh from a file (assuming this is a .off file), and create a bvh
+	load_off(filename, vertices, facets);
+	bvh = AABBTree(vertices, facets);
+}
+
 // Read a triangle mesh from an off file
 void load_off(const std::string &filename, MatrixXd &V, MatrixXi &F) {
 	std::ifstream in(filename);

@@ -4,6 +4,10 @@ project(assignment4)
 # Project sources
 add_executable(${PROJECT_NAME}
 	src/main.cpp
+	src/raytracing.h
+	src/raytracing.cpp
+	src/bvh.cpp
+	src/intersect.cpp
 	src/types.h
 	src/load.h
 	src/load.cpp
