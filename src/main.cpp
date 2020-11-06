@@ -241,6 +241,24 @@ bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, co
 	//
 	// Compute whether the ray intersects the given triangle.
 	// If you have done the parallelogram case, this should be very similar to it.
+	Matrix3d M;
+	M.col(0) = a - b;
+	M.col(1) = a - c;
+	M.col(2) = ray.direction;
+
+	Vector3d y;
+	y = a - ray.origin;
+
+	Vector3d x = M.colPivHouseholderQr().solve(y);
+	double u = x(0), v = x(1), t = x(2);
+
+	if (u > 0 && v > 0 && u + v < 1 && t > 0) {
+		hit.ray_param = t;
+		hit.position = ray.origin + ray.direction * hit.ray_param;
+		hit.normal = (b - a).cross(c - a).normalized();
+		return true;
+	}
+
 	return false;
 }
 
@@ -257,6 +275,9 @@ bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
 	// TODO: (Assignment 3)
 
 	// Method (1): Traverse every triangle and return the closest hit.
+	for (int i = 0; i < facets.rows(); i++) {
+		std::cout << facets.row(i) << std::endl;
+	}
 
 	// Method (2): Traverse the BVH tree and test the intersection with a
 	// triangles at the leaf nodes that intersects the input ray.
@@ -372,8 +393,10 @@ Vector3d shoot_ray(const Scene &scene, const Ray &ray, int max_bounce) {
 void render_scene(const Scene &scene) {
 	std::cout << "Simple ray tracer." << std::endl;
 
-	int w = 640;
-	int h = 480;
+	// int w = 640;
+	// int h = 480;
+	int w = 8;
+	int h = 6;
 	MatrixXd R = MatrixXd::Zero(w, h);
 	MatrixXd G = MatrixXd::Zero(w, h);
 	MatrixXd B = MatrixXd::Zero(w, h);
