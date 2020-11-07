@@ -5,11 +5,13 @@
 #include "types.h"
 #include "load.h"
 #include "raytracing.h"
+#include <chrono>
 
 // Shortcut to avoid Eigen:: everywhere, DO NOT USE IN .h
 using namespace Eigen;
 
 void render_scene(const Scene &scene) {
+	std::chrono::steady_clock::time_point timer_begin = std::chrono::steady_clock::now();
 	std::cout << "Simple ray tracer." << std::endl;
 
 	int w = 640;
@@ -71,6 +73,8 @@ void render_scene(const Scene &scene) {
 	// Save to png
 	const std::string filename("raytrace.png");
 	write_matrix_to_png(R, G, B, A, filename);
+	std::chrono::steady_clock::time_point timer_end = std::chrono::steady_clock::now();
+	std::cout << "Time cost = " << std::chrono::duration_cast<std::chrono::seconds>(timer_end - timer_begin).count() << " seconds" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
