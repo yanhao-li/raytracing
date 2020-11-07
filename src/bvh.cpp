@@ -15,6 +15,9 @@ AlignedBox3d bbox_triangle(const Vector3d &a, const Vector3d &b, const Vector3d 
 
 AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 	// Compute the centroids of all the triangles in the input mesh
+	// F => collection of facets (triangles) [[index1, index2, index3], [index4, index5, index6],...]
+	// V => collection of vertices [[x1, y1, z1], [x2, y2, z2],...]
+	// centroids[i][j] => 
 	MatrixXd centroids(F.rows(), V.cols());
 	centroids.setZero();
 	for (int i = 0; i < F.rows(); ++i) {
