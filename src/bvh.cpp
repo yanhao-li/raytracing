@@ -29,10 +29,69 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 
 	// TODO: (Assignment 3)
 
-	// Method (1): Top-down approach.
+	// Top-down approach.
 	// Split each set of primitives into 2 sets of roughly equal size,
 	// based on sorting the centroids along one direction or another.
+	// Find the longest dimention
+	std::vector<int> triangles(F.rows()); 
 
-	// Method (2): Bottom-up approach.
-	// Merge nodes 2 by 2, starting from the leaves of the forest, until only 1 tree is left.
+	// function for build the tree for range [l, r) of triangles
+	// return index of root
+	std::function<int(int, int, int)> build = [&](int l, int r, int parent) {
+		if (r - l == 0) {
+			return -1;
+		}
+		else if (r - l == 1) { // leaf node
+			Node node;
+			int triangle_index = triangles[l];
+			Vector3d a = V.row(F(triangle_index, 0));
+			Vector3d b = V.row(F(triangle_index, 1));
+			Vector3d c = V.row(F(triangle_index, 2));
+			node.bbox = bbox_triangle(a, b, c);
+			node.parent = parent;
+			node.left = -1;
+			node.right = -1;
+			node.triangle = triangle_index;
+			nodes.push_back(node);
+			return (int) (nodes.size() - 1);
+		}
+		else {
+			AlignedBox3d cbox;
+			// generate the aligned box for all centroids
+			for (int i = l; i < r; i++) {
+				Vector3d centroid = centroids.row(triangles[i]).transpose();
+				cbox.extend(centroid);
+			}
+
+			// use the diagonal vector to find the longest side
+			Vector3d diagonal = cbox.diagonal();
+			int longest_side = 0;
+			for (int i = 1; i < 3; i++) {
+				if (diagonal(i) > diagonal(longest_side)) {
+					longest_side = i;
+				}
+			}
+
+			std::sort(triangles.begin() + l, triangles.end() + r, [&](int i1, int i2) {
+				return centroids(i1, longest_side) < centroids(i2, longest_side);
+			});
+
+			int midpoint = (l + r) / 2;
+			int cur = nodes.size();
+			nodes.resize(cur + 1);
+			int left = build(l, midpoint, cur);
+			int right = build(midpoint, r, cur);
+			Node &node = nodes[cur];
+			node.left = left;
+			node.right = right;
+			node.parent = parent;
+			node.triangle = -1;
+			node.bbox = nodes[node.left].bbox.extend(nodes[node.right].bbox);
+
+			return cur;
+		}
+
+	};
+
+	root = build(0, triangles.size(), -1);
 }

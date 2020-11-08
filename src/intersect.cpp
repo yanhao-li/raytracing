@@ -73,20 +73,20 @@ bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
 
 	// Method (1): Traverse every triangle and return the closest hit.
 	bool ret = false;
-	closest_hit.ray_param = std::numeric_limits<double>::max();
-	for (int i = 0; i < facets.rows(); i++) {
-		Vector3d a =  vertices.row(facets(i, 0));
-		Vector3d b = vertices.row(facets(i, 1));
-		Vector3d c = vertices.row(facets(i, 2));
+	// closest_hit.ray_param = std::numeric_limits<double>::max();
+	// for (int i = 0; i < facets.rows(); i++) {
+	// 	Vector3d a =  vertices.row(facets(i, 0));
+	// 	Vector3d b = vertices.row(facets(i, 1));
+	// 	Vector3d c = vertices.row(facets(i, 2));
 
-		Intersection hit;
-		if (intersect_triangle(ray, a, b, c, hit)) {
-			if (hit.ray_param < closest_hit.ray_param) {
-				closest_hit = hit;
-				ret = true;
-			}
-		};
-	}
+	// 	Intersection hit;
+	// 	if (intersect_triangle(ray, a, b, c, hit)) {
+	// 		if (hit.ray_param < closest_hit.ray_param) {
+	// 			closest_hit = hit;
+	// 			ret = true;
+	// 		}
+	// 	};
+	// }
 
 	// Method (2): Traverse the BVH tree and test the intersection with a
 	// triangles at the leaf nodes that intersects the input ray.
