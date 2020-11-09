@@ -1,31 +1,5 @@
 #include "types.h"
 
-bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, const Vector3d &c, Intersection &hit) {
-	// TODO: (Assignment 3)
-	//
-	// Compute whether the ray intersects the given triangle.
-	// If you have done the parallelogram case, this should be very similar to it.
-	Matrix3d M;
-	M.col(0) = a - b;
-	M.col(1) = a - c;
-	M.col(2) = ray.direction;
-
-	Vector3d y;
-	y = a - ray.origin;
-
-	Vector3d x = M.colPivHouseholderQr().solve(y);
-	double u = x(0), v = x(1), t = x(2);
-
-	if (u > 0 && v > 0 && u + v < 1 && t > 0) {
-		hit.ray_param = t;
-		hit.position = ray.origin + ray.direction * hit.ray_param;
-		hit.normal = (b - a).cross(c - a).normalized();
-		return true;
-	}
-
-	return false;
-}
-
 bool Sphere::intersect(const Ray& ray, Intersection& hit) {
   // TODO: - Done
   //
@@ -69,7 +43,7 @@ bool Parallelogram::intersect(const Ray &ray, Intersection &hit) {
 }
 
 bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
-	// TODO: (Assignment 3)
+	// TODO: (Assignment 3) - Done
 
 	// Method (1): Traverse every triangle and return the closest hit.
 	bool ret = false;
@@ -91,6 +65,31 @@ bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
 	// Method (2): Traverse the BVH tree and test the intersection with a
 	// triangles at the leaf nodes that intersects the input ray.
 
+	std::stack<int> s;
+	s.push(bvh.root);
+	while(!s.empty()) {
+		AABBTree::Node &node = bvh.nodes[s.top()];
+		s.pop();
+		if (intersect_box(ray, node.bbox)) {
+			if (node.left == -1 && node.right == -1) {
+				Vector3d a = vertices.row(facets(node.triangle, 0)).transpose();
+				Vector3d b = vertices.row(facets(node.triangle, 1)).transpose();
+				Vector3d c = vertices.row(facets(node.triangle, 2)).transpose();
+
+				Intersection hit;
+				if (intersect_triangle(ray, a, b, c, hit)) {
+					if (hit.ray_param < closest_hit.ray_param) {
+						closest_hit = hit;
+						ret = true;
+					}
+				}
+			} else {
+				s.push(node.left);
+				s.push(node.right);
+			}
+		}
+	}
+
 	return ret;
 }
 
@@ -100,5 +99,31 @@ bool intersect_box(const Ray &ray, const AlignedBox3d &box) {
 	// Compute whether the ray intersects the given box.
 	// There is no need to set the resulting normal and ray parameter, since
 	// we are not testing with the real surface here anyway.
+	return false;
+}
+
+bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, const Vector3d &c, Intersection &hit) {
+	// TODO: (Assignment 3) - Done
+	//
+	// Compute whether the ray intersects the given triangle.
+	// If you have done the parallelogram case, this should be very similar to it.
+	Matrix3d M;
+	M.col(0) = a - b;
+	M.col(1) = a - c;
+	M.col(2) = ray.direction;
+
+	Vector3d y;
+	y = a - ray.origin;
+
+	Vector3d x = M.colPivHouseholderQr().solve(y);
+	double u = x(0), v = x(1), t = x(2);
+
+	if (u > 0 && v > 0 && u + v < 1 && t > 0) {
+		hit.ray_param = t;
+		hit.position = ray.origin + ray.direction * hit.ray_param;
+		hit.normal = (b - a).cross(c - a).normalized();
+		return true;
+	}
+
 	return false;
 }
