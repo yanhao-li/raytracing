@@ -73,7 +73,7 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 				}
 			}
 
-			std::sort(triangles.begin() + l, triangles.end() + r, [&](int i1, int i2) {
+			std::sort(triangles.begin() + l, triangles.begin() + r, [&](int i1, int i2) {
 				return centroids(i1, longest_side) < centroids(i2, longest_side);
 			});
 
