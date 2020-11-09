@@ -10,4 +10,12 @@ InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 # Outputs
 ## Ex.1. Triangle Mesh Ray Tracing
 ![](img/ex1.png)
-Time cost: 100 seconds
+Time cost: 99 seconds
+
+## Ex.2. AABB trees
+![](img/ex2_1.png)
+Time cost: 0 seconds
+
+---------
+![](img/ex2_2.png)
+Time cost: 9 seconds
