@@ -35,6 +35,7 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 	// based on sorting the centroids along one direction or another.
 	// Find the longest dimention
 	std::vector<int> triangles(F.rows()); 
+	std::iota(triangles.begin(), triangles.end(), 0);
 
 	// function for build the tree for range [l, r) of triangles
 	// return index of root
@@ -44,15 +45,14 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 		}
 		else if (r - l == 1) { // leaf node
 			Node node;
-			int triangle_index = triangles[l];
-			Vector3d a = V.row(F(triangle_index, 0));
-			Vector3d b = V.row(F(triangle_index, 1));
-			Vector3d c = V.row(F(triangle_index, 2));
+			Vector3d a = V.row(F(l, 0));
+			Vector3d b = V.row(F(l, 1));
+			Vector3d c = V.row(F(l, 2));
 			node.bbox = bbox_triangle(a, b, c);
 			node.parent = parent;
 			node.left = -1;
 			node.right = -1;
-			node.triangle = triangle_index;
+			node.triangle = l;
 			nodes.push_back(node);
 			return (int) (nodes.size() - 1);
 		}
@@ -60,7 +60,7 @@ AABBTree::AABBTree(const MatrixXd &V, const MatrixXi &F) {
 			AlignedBox3d cbox;
 			// generate the aligned box for all centroids
 			for (int i = l; i < r; i++) {
-				Vector3d centroid = centroids.row(triangles[i]).transpose();
+				Vector3d centroid = centroids.row(i).transpose();
 				cbox.extend(centroid);
 			}
 

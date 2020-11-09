@@ -14,10 +14,10 @@ void render_scene(const Scene &scene) {
 	std::chrono::steady_clock::time_point timer_begin = std::chrono::steady_clock::now();
 	std::cout << "Simple ray tracer." << std::endl;
 
-	int w = 64;
-	int h = 48;
-	// int w = 8;
-	// int h = 6;
+	// int w = 64;
+	// int h = 48;
+	int w = 8;
+	int h = 6;
 	MatrixXd R = MatrixXd::Zero(w, h);
 	MatrixXd G = MatrixXd::Zero(w, h);
 	MatrixXd B = MatrixXd::Zero(w, h);

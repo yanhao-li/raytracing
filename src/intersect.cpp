@@ -9,10 +9,16 @@ bool intersect_box(const Ray &ray, const AlignedBox3d &box) {
 	double tmin = 0;
 	double tmax = std::numeric_limits<double>::max();
 	for (int i = 0; i < 3; i++) {
-		double t1 = (box.min()[i] - ray.origin[i]) / ray.direction[i];
-		double t2 = (box.max()[i] - ray.origin[i]) / ray.direction[i];
-		tmin = std::max(std::min(t1, t2), tmin);
-		tmax = std::min(std::max(t1, t2), tmax);
+		if (std::abs(ray.direction(i)) < 1e-5) {
+			if (ray.origin[i] < box.min()[i] || ray.origin[i] > box.max()[i]) {
+					return false;
+			}
+		} else {
+			double t1 = (box.min()[i] - ray.origin[i]) / ray.direction[i];
+			double t2 = (box.max()[i] - ray.origin[i]) / ray.direction[i];
+			tmin = std::max(std::min(t1, t2), tmin);
+			tmax = std::min(std::max(t1, t2), tmax);
+		}
 	}
 	return (tmin <= tmax);
 }
@@ -88,9 +94,9 @@ bool Parallelogram::intersect(const Ray &ray, Intersection &hit) {
 bool Mesh::intersect(const Ray &ray, Intersection &closest_hit) {
 	// TODO: (Assignment 3) - Done
 
-	// Method (1): Traverse every triangle and return the closest hit.
 	bool ret = false;
-	// closest_hit.ray_param = std::numeric_limits<double>::max();
+	closest_hit.ray_param = std::numeric_limits<double>::max();
+	// Method (1): Traverse every triangle and return the closest hit.
 	// for (int i = 0; i < facets.rows(); i++) {
 	// 	Vector3d a =  vertices.row(facets(i, 0));
 	// 	Vector3d b = vertices.row(facets(i, 1));
