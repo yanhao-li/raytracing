@@ -8,19 +8,20 @@ bool intersect_box(const Ray &ray, const AlignedBox3d &box) {
 	// we are not testing with the real surface here anyway.
 	double tmin = 0;
 	double tmax = std::numeric_limits<double>::max();
+	Vector3d bottom = box.min();
+	Vector3d top = box.max();
 	for (int i = 0; i < 3; i++) {
-		if (std::abs(ray.direction(i)) < 1e-5) {
-			if (ray.origin[i] < box.min()[i] || ray.origin[i] > box.max()[i]) {
-					return false;
-			}
+		if (std::abs(ray.direction(i)) < std::numeric_limits<double>::min() && (ray.origin[i] < bottom[i] || ray.origin[i] > top[i])) {
+			return false;
 		} else {
-			double t1 = (box.min()[i] - ray.origin[i]) / ray.direction[i];
-			double t2 = (box.max()[i] - ray.origin[i]) / ray.direction[i];
+			double t1 = (bottom[i] - ray.origin[i]) / ray.direction[i];
+			double t2 = (top[i] - ray.origin[i]) / ray.direction[i];
 			tmin = std::max(std::min(t1, t2), tmin);
 			tmax = std::min(std::max(t1, t2), tmax);
 		}
 	}
-	return (tmin <= tmax);
+	if (tmin <= tmax) return true;
+	return false;
 }
 
 bool intersect_triangle(const Ray &ray, const Vector3d &a, const Vector3d &b, const Vector3d &c, Intersection &hit) {
